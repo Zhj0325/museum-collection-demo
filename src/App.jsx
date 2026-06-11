@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { RequireAuth } from './context/AuthContext';
 import { useAuth, getRoleHome } from './context/auth';
-import { isDemoMode, getOpLogs, resetDemoDb } from './api/mock';
+import { getOpLogs, resetDemoDb } from './api/mock';
+import { resolveMode, isDemoActive, isBackendLive } from './api/request';
 import LoginPage from './pages/login/LoginPage';
 import AdminHome from './pages/admin/AdminHome';
 import CollectionList from './pages/admin/CollectionList';
@@ -44,7 +45,21 @@ function HomeRedirect() {
 function DemoRibbon() {
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState([]);
-  if (!isDemoMode()) return null;
+  // 模式是异步探测的（先查后端是否在线），解析完成后再刷新角标
+  const [mode, setMode] = useState('resolving');
+  useEffect(() => {
+    resolveMode().then(() => setMode(isDemoActive() ? 'demo' : (isBackendLive() ? 'live' : 'dev')));
+  }, []);
+
+  if (mode === 'resolving' || mode === 'dev') return null;
+  if (mode === 'live') {
+    return (
+      <div className="demo-ribbon demo-ribbon-live" role="status">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+        已连接真实后端 · 数据共享并永久保留
+      </div>
+    );
+  }
 
   const show = () => { setLogs([...getOpLogs()]); setOpen(true); };
   const reset = () => {

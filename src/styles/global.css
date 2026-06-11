@@ -600,6 +600,10 @@ input[type="date"].form-input::-webkit-datetime-edit-day-field { color: var(--te
   animation: fadeInUp 0.6s 0.4s var(--ease-out) both;
 }
 .demo-ribbon:hover { background: rgba(36, 18, 9, 0.96); transform: translateY(-2px); }
+.demo-ribbon-live {
+  color: #A5E8B0; border-color: rgba(110, 200, 130, 0.4);
+  cursor: default; pointer-events: none;
+}
 
 /* ---- 图片预览 ---- */
 .img-preview {

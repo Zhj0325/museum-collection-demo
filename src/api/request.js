@@ -1,6 +1,62 @@
-import { isDemoMode, mockRequest } from './mock';
+import { mockRequest } from './mock';
 
-const BASE_URL = '';
+/* ============================================================
+   运行模式解析（三种）：
+   1. 强制演示：构建时 VITE_DEMO=1 或 URL 带 ?demo → 浏览器内 Mock
+   2. 线上(github.io)：从仓库读取 api-config.json 探测真实后端，
+      在线 → 直连后端（数据共享、永久保留）；离线 → 自动回退演示模式
+   3. 本地开发：相对路径走 vite 代理至 localhost:8080
+   ============================================================ */
+
+const FORCED_DEMO = import.meta.env.VITE_DEMO === '1'
+  || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo'));
+const ON_PAGES = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io');
+
+// 后端地址配置（随隧道地址变化，由 update-config.mjs 推送，前端运行时拉取）
+const CONFIG_SOURCES = [
+  { url: 'https://api.github.com/repos/Zhj0325/museum-collection-demo/contents/api-config.json', headers: { Accept: 'application/vnd.github.raw+json' } },
+  { url: 'https://raw.githubusercontent.com/Zhj0325/museum-collection-demo/main/api-config.json', headers: {} }
+];
+
+let apiBase = '';
+let demoActive = FORCED_DEMO;
+let modePromise = null;
+
+async function fetchWithTimeout(url, options = {}, ms = 6000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: ctl.signal });
+  } finally { clearTimeout(t); }
+}
+
+export function resolveMode() {
+  if (modePromise) return modePromise;
+  modePromise = (async () => {
+    if (FORCED_DEMO) { demoActive = true; return; }
+    if (!ON_PAGES) { demoActive = false; return; }
+    try {
+      let config = null;
+      for (const src of CONFIG_SOURCES) {
+        try {
+          const res = await fetchWithTimeout(src.url, { headers: src.headers });
+          if (res.ok) { config = await res.json(); break; }
+        } catch { /* 尝试下一个源 */ }
+      }
+      if (!config || !config.apiBase) throw new Error('无后端配置');
+      const health = await fetchWithTimeout(config.apiBase + '/api/auth/health');
+      if (!health.ok) throw new Error('后端不在线');
+      apiBase = config.apiBase.replace(/\/$/, '');
+      demoActive = false;
+    } catch {
+      demoActive = true; // 后端不可达 → 回退浏览器内演示模式
+    }
+  })();
+  return modePromise;
+}
+
+export function isDemoActive() { return demoActive; }
+export function isBackendLive() { return ON_PAGES && !demoActive; }
 
 function getToken() {
   return localStorage.getItem('token');
@@ -13,8 +69,10 @@ function handleUnauth() {
 }
 
 async function request(url, options = {}) {
-  // 演示模式：纯静态部署（GitHub Pages）时由浏览器内 Mock 接管全部接口
-  if (isDemoMode()) {
+  await resolveMode();
+
+  // 演示模式：由浏览器内 Mock 接管全部接口
+  if (demoActive) {
     return mockRequest(options.method || 'GET', url, options.data);
   }
 
@@ -25,7 +83,7 @@ async function request(url, options = {}) {
   };
 
   try {
-    const res = await fetch(BASE_URL + url, {
+    const res = await fetch(apiBase + url, {
       method: options.method || 'GET',
       headers,
       body: options.data ? JSON.stringify(options.data) : undefined,
