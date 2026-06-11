@@ -13,9 +13,11 @@ const FORCED_DEMO = import.meta.env.VITE_DEMO === '1'
 const ON_PAGES = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io');
 
 // 后端地址配置（随隧道地址变化，由 update-config.mjs 推送，前端运行时拉取）
+// 优先同源（无频率限制、可协商缓存），GitHub API 与 raw 作为兜底
 const CONFIG_SOURCES = [
-  { url: 'https://api.github.com/repos/Zhj0325/museum-collection-demo/contents/api-config.json', headers: { Accept: 'application/vnd.github.raw+json' } },
-  { url: 'https://raw.githubusercontent.com/Zhj0325/museum-collection-demo/main/api-config.json', headers: {} }
+  { url: new URL('api-config.json', typeof window !== 'undefined' ? window.location.href.split('#')[0] : 'http://localhost/').href, headers: {}, options: { cache: 'no-cache' } },
+  { url: 'https://api.github.com/repos/Zhj0325/museum-collection-demo/contents/public/api-config.json', headers: { Accept: 'application/vnd.github.raw+json' } },
+  { url: 'https://raw.githubusercontent.com/Zhj0325/museum-collection-demo/main/public/api-config.json', headers: {} }
 ];
 
 let apiBase = '';
@@ -39,7 +41,7 @@ export function resolveMode() {
       let config = null;
       for (const src of CONFIG_SOURCES) {
         try {
-          const res = await fetchWithTimeout(src.url, { headers: src.headers });
+          const res = await fetchWithTimeout(src.url, { headers: src.headers, ...(src.options || {}) });
           if (res.ok) { config = await res.json(); break; }
         } catch { /* 尝试下一个源 */ }
       }
