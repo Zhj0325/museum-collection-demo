@@ -361,7 +361,11 @@ function handleExhibitions(method, parts, params, data) {
       code: (isPerm ? 'ZL' : 'LZ') + String(db.nextId).slice(-3),
       hallName: hall ? hall.name : '',
       location: isPerm ? (hall ? hall.name : '') : (data.location || '待定'),
-      status: '筹备中'
+      // 与真实后端一致：新建展览先进入审批流
+      status: '待审批',
+      exhibitionType: isPerm ? 'PERMANENT' : 'TEMPORARY',
+      applicant: (currentUser() || {}).realName || '李展览',
+      createdAt: ts(0, '11:00')
     };
     exs.unshift(ex); save();
     return ex;

@@ -29,8 +29,9 @@ $url = $null
 $cpolarLog = Get-ChildItem "$env:USERPROFILE\.cpolar\logs" -Filter 'cpolar_service.log*' -ErrorAction SilentlyContinue |
     Where-Object Length -gt 0 | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if ($cpolarLog) {
-    # 在 NewTunnel 消息里找「公网 https 地址 → localhost:8080」的最新一条
-    $m = Select-String -Path $cpolarLog.FullName -Pattern '"Url":"(https://[^"]+)","Protocol":"https","LocalAddr":"http://localhost:8080"' |
+    # 取最新的「Tunnel established at https://…」（两条 http 隧道都指向 8080；
+    # 日志里 JSON 引号带转义，直接匹配 established 行最可靠）
+    $m = Select-String -Path $cpolarLog.FullName -Pattern 'Tunnel established at (https://[a-z0-9.-]+)' |
         Select-Object -Last 1
     if ($m) { $url = $m.Matches[0].Groups[1].Value }
 }

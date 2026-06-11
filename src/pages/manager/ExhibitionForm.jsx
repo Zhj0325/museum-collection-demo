@@ -45,7 +45,7 @@ export default function ExhibitionForm() {
       } else {
         await post(`/api/exhibitions/${type}`, payload);
       }
-      alert('保存成功');
+      alert(id ? '保存成功' : '已提交，等待管理员审批通过后生效');
       navigate('/manager/exhibition-list' + (type === 'temporary' ? '?tab=1' : ''));
     } catch { /* 错误已由 request.js 统一提示 */ } finally { setSubmitting(false); }
   };
