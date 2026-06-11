@@ -64,7 +64,7 @@ export default function ApprovalDetail() {
         <div className="card">
           <div className="detail-row"><span className="detail-label">申请人</span><span className="detail-value">{detail.applicant}</span></div>
           <div className="detail-row"><span className="detail-label">原因</span><span className="detail-value">{detail.reason}</span></div>
-          {detail.createdAt && <div className="detail-row"><span className="detail-label">申请时间</span><span className="detail-value">{detail.createdAt}</span></div>}
+          {detail.createdAt && <div className="detail-row"><span className="detail-label">申请时间</span><span className="detail-value">{(detail.createdAt || '').replace('T', ' ')}</span></div>}
           {detail.items && detail.items.length > 0 && (
             <div className="detail-row" style={{ flexDirection: 'column', gap: 8 }}>
               <span className="detail-label">关联藏品</span>

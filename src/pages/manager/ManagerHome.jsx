@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 export default function ManagerHome() {
   const { userInfo, logout } = useAuth();
@@ -9,8 +10,8 @@ export default function ManagerHome() {
   const [stats, setStats] = useState({});
 
   const entries = [
-    { icon: '展', title: '常设展览', desc: '管理常设展览信息', path: '/manager/exhibition-list?tab=0' },
-    { icon: '巡', title: '临时巡展', desc: '管理临时展览信息', path: '/manager/exhibition-list?tab=1' },
+    { icon: '常', title: '常设展览', desc: '管理常设展览信息', path: '/manager/exhibition-list?tab=0' },
+    { icon: '时', title: '临时巡展', desc: '管理临时展览信息', path: '/manager/exhibition-list?tab=1' },
     { icon: '出', title: '出库申请', desc: '提交藏品出库申请', path: '/manager/outbound-form' },
     { icon: '入', title: '入库申请', desc: '提交藏品入库申请', path: '/manager/inbound-form' },
     { icon: '修', title: '修复申请', desc: '提交藏品修复申请', path: '/manager/repair-form' }
@@ -54,7 +55,7 @@ export default function ManagerHome() {
         <div className="card">
           <div className="entry-grid">
             {entries.map((e, i) => (
-              <div key={i} className="entry-row" onClick={() => navigate(e.path)}>
+              <div key={i} className="entry-row" onClick={clickSafe(() => navigate(e.path))}>
                 <div className="entry-icon">{e.icon}</div>
                 <div className="entry-body">
                   <div className="entry-title">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 export default function StorageRecords() {
   const [list, setList] = useState([]);
@@ -38,11 +39,11 @@ export default function StorageRecords() {
           <button className="btn btn-primary btn-sm" style={{ marginLeft: 8 }} onClick={handleSearch}>搜索</button>
         </div>
         {list.map(item => (
-          <div key={item.id} className="list-item" onClick={() => navigate('/keeper/storage-record-detail?id=' + item.id)} style={{ cursor: 'pointer' }}>
+          <div key={item.id} className="list-item" onClick={clickSafe(() => navigate('/keeper/storage-record-detail?id=' + item.id))} style={{ cursor: 'pointer' }}>
             <div className="list-item-icon">{item.type === '入库' ? '入' : '出'}</div>
             <div className="list-item-body">
               <div className="list-item-title">{item.collectionName || '藏品'}</div>
-              <div className="list-item-sub">{item.warehouseName || ''} · {(item.inboundDate || item.outboundDate || '').replace('T', ' ')}</div>
+              <div className="list-item-sub">{item.warehouseName || ''} ·  {(item.inboundDate || item.outboundDate || '').replace('T', ' ')}</div>
             </div>
             <div className="list-item-extra">
               <span className={`tag tag-${item.type === '入库' ? 'approved' : 'processing'}`}>{item.type}</span>

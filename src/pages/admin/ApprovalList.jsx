@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 const TABS = ['出库申请', '入库申请', '修复申请', '展览审批'];
 const TYPE_KEYS = ['outbound', 'inbound', 'repair', 'exhibition'];
@@ -43,7 +44,7 @@ export default function ApprovalList() {
       </div>
       <div className="container" style={{ paddingTop: 12 }}>
         {list.map(item => (
-          <div key={item.id} className="list-item" onClick={() => { const extra = item.exhibitionType ? '&exhibitionType=' + item.exhibitionType : ''; navigate('/admin/approval-detail?id=' + item.id + '&type=' + item.type + extra); }} style={{ cursor: 'pointer' }}>
+          <div key={item.id} className="list-item" onClick={clickSafe(() => { const extra = item.exhibitionType ? '&exhibitionType=' + item.exhibitionType : ''; navigate('/admin/approval-detail?id=' + item.id + '&type=' + item.type + extra); })} style={{ cursor: 'pointer' }}>
             <div className="list-item-icon">{['出','入','修','展'][activeTab]}</div>
             <div className="list-item-body">
               <div className="list-item-title">{item.code || item.name || item.collectionName || '申请'}</div>

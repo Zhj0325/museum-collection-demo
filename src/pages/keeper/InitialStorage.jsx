@@ -8,7 +8,7 @@ export default function InitialStorage() {
   const [warehouses, setWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [inboundDate, setInboundDate] = useState(new Date().toISOString().slice(0, 10));
-  const [remark, setRemark] = useState('');
+  const [remark, setRemark] = useState('无');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 

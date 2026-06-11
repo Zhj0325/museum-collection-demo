@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 const TABS = ['全部', '待修复', '修复中', '已修复'];
 const SORT_OPTIONS = [
@@ -70,7 +71,7 @@ export default function RepairList() {
         )}
 
         {sorted.map(item => (
-          <div key={item.id} className="list-item" onClick={() => navigate('/expert/repair-submit?id=' + item.id)} style={{ cursor: 'pointer' }}>
+          <div key={item.id} className="list-item" onClick={clickSafe(() => navigate('/expert/repair-submit?id=' + item.id))} style={{ cursor: 'pointer' }}>
             <div className="list-item-icon">{item.collectionName?.charAt(0)}</div>
             <div className="list-item-body">
               <div className="list-item-title">{item.collectionName}</div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 export default function KeeperHome() {
   const { userInfo, logout } = useAuth();
@@ -9,9 +10,9 @@ export default function KeeperHome() {
   const [stats, setStats] = useState({});
 
   const entries = [
-    { icon: '新', title: '未入库藏品入库', desc: '将新藏品直接入库登记', path: '/keeper/initial-storage' },
+    { icon: '入', title: '未入库藏品入库', desc: '将新藏品直接入库登记', path: '/keeper/initial-storage' },
     { icon: '登', title: '出入库登记', desc: '藏品出库/入库操作', path: '/keeper/storage-form' },
-    { icon: '史', title: '存放记录', desc: '查看历史出入库记录', path: '/keeper/storage-records' },
+    { icon: '存', title: '存放记录', desc: '查看历史出入库记录', path: '/keeper/storage-records' },
     { icon: '览', title: '藏品浏览', desc: '浏览所有藏品信息', path: '/keeper/collection-browse' }
   ];
 
@@ -51,7 +52,7 @@ export default function KeeperHome() {
         <div className="card">
           <div className="entry-grid">
             {entries.map((e, i) => (
-              <div key={i} className="entry-row" onClick={() => navigate(e.path)}>
+              <div key={i} className="entry-row" onClick={clickSafe(() => navigate(e.path))}>
                 <div className="entry-icon">{e.icon}</div>
                 <div className="entry-body">
                   <div className="entry-title">

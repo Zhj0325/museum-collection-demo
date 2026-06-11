@@ -21,17 +21,19 @@ export default function CollectionDetail() {
         </div>
       </div>
       <div className="detail-banner">
-        <div className="detail-icon">{detail.name?.charAt(0)}</div>
+        <div className="detail-icon">
+          {detail.imageUrl ? <img src={detail.imageUrl} alt={detail.name} /> : detail.name?.charAt(0)}
+        </div>
         <div className="detail-name">{detail.name}</div>
         <div style={{ position: 'relative', zIndex: 1, marginTop: 8 }}>
-          <span className={`tag tag-${detail.status === '在库' ? 'approved' : detail.status === '未入库' ? 'pending' : 'processing'}`} style={{ fontSize: 13 }}>{detail.status}</span>
+          <span className={`tag tag-${detail.status === '在库' ? 'approved' : detail.status === '未入库' ? 'pending' : detail.status === '修复中' ? 'repair' : 'processing'}`} style={{ fontSize: 13 }}>{detail.status}</span>
         </div>
       </div>
       <div className="container" style={{ paddingTop: 16 }}>
         <div className="card">
-          <div className="detail-row"><span className="detail-label">藏品编号</span><span className="detail-value">{detail.code}</span></div>
-          <div className="detail-row"><span className="detail-label">藏品类型</span><span className="detail-value">{detail.type}</span></div>
-          <div className="detail-row"><span className="detail-label">文物级别</span><span className="detail-value">{detail.level}</span></div>
+          <div className="detail-row"><span className="detail-label">藏品编号</span><span className="detail-value">{detail.code || '-'}</span></div>
+          <div className="detail-row"><span className="detail-label">藏品类型</span><span className="detail-value">{detail.type || '-'}</span></div>
+          <div className="detail-row"><span className="detail-label">文物级别</span><span className="detail-value">{detail.level || '-'}</span></div>
           <div className="detail-row"><span className="detail-label">藏品库房</span><span className="detail-value">{detail.warehouse || '-'}</span></div>
           <div className="detail-row"><span className="detail-label">入库日期</span><span className="detail-value">{detail.entryDate || '-'}</span></div>
           <div className="detail-row"><span className="detail-label">材质</span><span className="detail-value">{detail.material || '-'}</span></div>

@@ -1,5 +1,20 @@
 # 部署说明
 
+## 7×24 上云（电脑关机也能跑）
+
+后端已 Docker 化（`museum-server/Dockerfile`）并支持云端配置
+（`application-cloud.yml`，数据库连接走环境变量 DB_URL / DB_USERNAME / DB_PASSWORD / JWT_SECRET）。
+三条路线任选：
+
+| 方案 | 成本 | 特点 | 需要你提供 |
+|------|------|------|-----------|
+| 腾讯云/阿里云轻量服务器 | 学生价约 ¥10-30/月 | 真 7×24、固定 IP、答辩最稳 | 服务器 SSH 信息 |
+| HF Spaces(Docker) + TiDB Cloud | 免费 | 48h 无人访问会休眠，访问自动唤醒(~40s) | HF 写权限 token + TiDB 连接串 |
+| Render 免费档 + TiDB Cloud | 免费 | 15min 空闲休眠，唤醒 ~1min | Render 账号 token + TiDB 连接串 |
+
+上云后跑一次 `node update-config.mjs <云端地址>`，线上前端即切换，且地址固定、一劳永逸。
+
+
 ## 当前在线演示（临时隧道）
 
 本机已通过 Cloudflare 快速隧道发布演示站（无需任何账号）：

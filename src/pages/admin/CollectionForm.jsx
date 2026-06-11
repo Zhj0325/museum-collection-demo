@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { get, post, put } from '../../api/request';
+import { compressImage } from '../../utils/image';
 
 const TYPES = ['未分类', '青铜器', '陶瓷', '书画', '玉器', '其他'];
 const LEVELS = ['一级文物', '二级文物', '三级文物', '一般文物', '未定级'];
@@ -12,7 +13,7 @@ export default function CollectionForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     code: '', name: '', type: '未分类', level: '未定级', status: '未入库',
-    warehouseId: null, entryDate: '', description: '', imageUrl: '', version: 0
+    warehouseId: null, entryDate: '', description: '无', imageUrl: '', version: 0
   });
   const [warehouses, setWarehouses] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -108,16 +109,37 @@ export default function CollectionForm() {
             </select>
           </div>
           <div className="form-item"><span className="form-label">入库日期</span><input className="form-input" type="date" value={form.entryDate} onChange={e => set('entryDate', e.target.value)} /></div>
-          <div className="form-item">
-            <span className="form-label">图片URL</span>
-            <input className="form-input" value={form.imageUrl} onChange={e => set('imageUrl', e.target.value)} placeholder="输入图片链接" />
-          </div>
-          {form.imageUrl && (
-            <div style={{ marginTop: 8 }}>
-              <img src={form.imageUrl} alt="预览" className="img-preview" style={{ width: 120, height: 120 }} />
-              <button className="btn btn-sm btn-default" style={{ marginLeft: 8 }} onClick={() => set('imageUrl', '')}>清除</button>
+          <div className="form-item form-item-col">
+            <span className="form-label">藏品图片</span>
+            <div className="upload-row">
+              <label className="upload-box">
+                {form.imageUrl
+                  ? <img src={form.imageUrl} alt="藏品图片" />
+                  : (
+                    <span className="upload-hint">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+                      拍照 / 选图
+                    </span>
+                  )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={async e => {
+                    const file = e.target.files[0];
+                    e.target.value = '';
+                    if (!file) return;
+                    try { set('imageUrl', await compressImage(file)); }
+                    catch (err) { alert(err.message || '图片处理失败'); }
+                  }}
+                />
+              </label>
+              {form.imageUrl && (
+                <button className="btn btn-sm btn-default" onClick={() => set('imageUrl', '')}>移除图片</button>
+              )}
             </div>
-          )}
+            <span className="form-hint">支持手机拍照或从相册选择，自动压缩后保存</span>
+          </div>
         </div>
 
         <div className="card">

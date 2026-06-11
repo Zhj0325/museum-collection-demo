@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 const TABS = ['全部', '待鉴定', '待审核', '已通过', '已驳回'];
 const SORT_OPTIONS = [
@@ -89,7 +90,7 @@ export default function AppraisalList() {
         )}
 
         {sorted.map(item => (
-          <div key={item.id} className="list-item" onClick={() => goSubmit(item)} style={{ cursor: 'pointer' }}>
+          <div key={item.id} className="list-item" onClick={clickSafe(() => goSubmit(item))} style={{ cursor: 'pointer' }}>
             <div className="list-item-icon">{item.collectionName?.charAt(0)}</div>
             <div className="list-item-body">
               <div className="list-item-title">{item.collectionName}</div>

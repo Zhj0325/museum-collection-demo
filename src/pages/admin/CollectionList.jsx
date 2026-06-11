@@ -107,13 +107,15 @@ export default function CollectionList() {
 
         {list.map(item => (
           <div key={item.id} className="list-item">
-            <div className="list-item-icon">{item.name?.charAt(0)}</div>
+            <div className="list-item-icon">
+              {item.imageUrl ? <img src={item.imageUrl} alt={item.name} loading="lazy" /> : item.name?.charAt(0)}
+            </div>
             <div className="list-item-body">
               <div className="list-item-title">{item.name}</div>
               <div className="list-item-sub">{item.code} · {item.type} · {item.level}</div>
             </div>
             <div className="list-item-extra">
-              <span className={`tag tag-${item.status === '在库' ? 'approved' : item.status === '未入库' ? 'pending' : 'processing'}`}>{item.status}</span>
+              <span className={`tag tag-${item.status === '在库' ? 'approved' : item.status === '未入库' ? 'pending' : item.status === '修复中' ? 'repair' : 'processing'}`}>{item.status}</span>
             </div>
             <div className="action-btns">
               <button className="btn btn-default btn-sm" onClick={() => navigate('/admin/collection-form?id=' + item.id)}>编辑</button>

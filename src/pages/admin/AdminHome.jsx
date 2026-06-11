@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth';
 import { get } from '../../api/request';
+import { clickSafe } from '../../utils/clickSafe';
 
 export default function AdminHome() {
   const { userInfo, logout } = useAuth();
@@ -11,9 +12,9 @@ export default function AdminHome() {
   const entries = [
     { icon: '藏', title: '藏品管理', desc: '增删改查藏品信息', path: '/admin/collection-list' },
     { icon: '录', title: '藏品录入', desc: '新增藏品到系统', path: '/admin/collection-form' },
-    { icon: '审', title: '审批管理', desc: '出/入库、修复、展览审批', path: '/admin/approval-list' },
+    { icon: '管', title: '审批管理', desc: '出/入库、修复、展览审批', path: '/admin/approval-list' },
     { icon: '鉴', title: '鉴定指派', desc: '指派专家鉴定藏品', path: '/admin/appraisal-assign' },
-    { icon: '核', title: '鉴定审核', desc: '审核专家提交的鉴定结论', path: '/admin/appraisal-audit' },
+    { icon: '审', title: '鉴定审核', desc: '审核专家提交的鉴定结论', path: '/admin/appraisal-audit' },
     { icon: '修', title: '修复指派', desc: '指派专家修复藏品', path: '/admin/repair-assign' }
   ];
 
@@ -56,7 +57,7 @@ export default function AdminHome() {
         <div className="card">
           <div className="entry-grid">
             {entries.map((e, i) => (
-              <div key={i} className="entry-row" onClick={() => navigate(e.path)}>
+              <div key={i} className="entry-row" onClick={clickSafe(() => navigate(e.path))}>
                 <div className="entry-icon">{e.icon}</div>
                 <div className="entry-body">
                   <div className="entry-title">

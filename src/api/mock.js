@@ -349,8 +349,26 @@ function handleExhibitions(method, parts, params, data) {
   if (method === 'GET' && sub === 'temporary') return exs.filter(e => e.type === 'temporary' && e.status !== '待审批');
   if (method === 'GET' && sub === 'pending') return exs.filter(e => e.status === '待审批');
 
-  // /api/exhibitions/{PERMANENT|TEMPORARY}/{id}[/approve] —— 展览审批
-  if ((sub === 'PERMANENT' || sub === 'TEMPORARY' || sub === 'permanent' || sub === 'temporary') && parts.length >= 4) {
+  // /api/exhibitions/{permanent|temporary} 的 POST —— 分型新建（与真实后端一致）
+  const isTypeSeg = ['PERMANENT', 'TEMPORARY', 'permanent', 'temporary'].includes(sub);
+  if (isTypeSeg && parts.length === 3 && method === 'POST') {
+    const isPerm = sub.toLowerCase() === 'permanent';
+    const hall = data.hallId ? byId(db.halls, data.hallId) : null;
+    const ex = {
+      ...data,
+      id: nid(),
+      type: isPerm ? 'permanent' : 'temporary',
+      code: (isPerm ? 'ZL' : 'LZ') + String(db.nextId).slice(-3),
+      hallName: hall ? hall.name : '',
+      location: isPerm ? (hall ? hall.name : '') : (data.location || '待定'),
+      status: '筹备中'
+    };
+    exs.unshift(ex); save();
+    return ex;
+  }
+
+  // /api/exhibitions/{permanent|temporary}/{id}[/approve] —— 详情/更新/删除/审批
+  if (isTypeSeg && parts.length >= 4) {
     const ex = byId(exs, parts[3]);
     if (!ex) fail('展览不存在', 404);
     if (method === 'PUT' && parts[4] === 'approve') {
@@ -358,6 +376,19 @@ function handleExhibitions(method, parts, params, data) {
       ex.approveComment = data.comment || '';
       save();
       return ex;
+    }
+    if (method === 'PUT') {
+      const hall = data.hallId ? byId(db.halls, data.hallId) : null;
+      Object.assign(ex, data, { id: ex.id, hallName: hall ? hall.name : ex.hallName });
+      save();
+      return ex;
+    }
+    if (method === 'DELETE') {
+      const idx = exs.findIndex(e => String(e.id) === String(parts[3]));
+      exs.splice(idx, 1);
+      db.exhibitionCollections = db.exhibitionCollections.filter(m => m.exhibitionId !== ex.id);
+      save();
+      return true;
     }
     return { ...ex, applicant: ex.applicant || '李展览' };
   }

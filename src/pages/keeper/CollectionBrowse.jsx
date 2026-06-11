@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { get } from '../../api/request';
 import { useAuth, getRoleHome } from '../../context/auth';
+import { clickSafe } from '../../utils/clickSafe';
 
 const SORT_OPTIONS = [
   { value: 'createdAt|desc', label: '最新创建' },
@@ -102,14 +103,16 @@ export default function CollectionBrowse() {
         )}
 
         {list.map(item => (
-          <div key={item.id} className="list-item" onClick={() => navigate(`/${rolePrefix}/collection-detail?id=` + item.id)} style={{ cursor: 'pointer' }}>
-            <div className="list-item-icon">{item.name?.charAt(0)}</div>
+          <div key={item.id} className="list-item" onClick={clickSafe(() => navigate(`/${rolePrefix}/collection-detail?id=` + item.id))} style={{ cursor: 'pointer' }}>
+            <div className="list-item-icon">
+              {item.imageUrl ? <img src={item.imageUrl} alt={item.name} loading="lazy" /> : item.name?.charAt(0)}
+            </div>
             <div className="list-item-body">
               <div className="list-item-title">{item.name}</div>
-              <div className="list-item-sub">{item.code} · {item.type} · {item.level}</div>
+              <div className="list-item-sub">{item.code} · {item.type || '未分类'} · {item.level || '未定级'}</div>
             </div>
             <div className="list-item-extra">
-              <span className={`tag tag-${item.status === '在库' ? 'approved' : item.status === '未入库' ? 'pending' : 'processing'}`}>{item.status}</span>
+              <span className={`tag tag-${item.status === '在库' ? 'approved' : item.status === '未入库' ? 'pending' : item.status === '修复中' ? 'repair' : 'processing'}`}>{item.status}</span>
             </div>
             <span className="entry-arrow">›</span>
           </div>

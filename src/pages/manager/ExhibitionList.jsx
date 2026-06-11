@@ -6,7 +6,7 @@ export default function ExhibitionList() {
   const [searchParams] = useSearchParams();
   const initialTab = parseInt(searchParams.get('tab') || '0') || 0;
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [list, setList] = useState([]);
+  const [lists, setLists] = useState({ 0: [], 1: [] });
   const [loaded, setLoaded] = useState({});
   const navigate = useNavigate();
 
@@ -14,7 +14,7 @@ export default function ExhibitionList() {
     if (!force && loaded[idx]) return;
     const url = idx === 0 ? '/api/exhibitions/permanent' : '/api/exhibitions/temporary';
     get(url).then(data => {
-      setList((data.records || data || []).map(item => ({ ...item, type: idx === 0 ? 'permanent' : 'temporary' })));
+      setLists(prev => ({ ...prev, [idx]: (data.records || data || []).map(item => ({ ...item, type: idx === 0 ? 'permanent' : 'temporary' })) }));
       setLoaded(prev => ({ ...prev, [idx]: true }));
     }).catch(() => {});
   };
@@ -23,11 +23,15 @@ export default function ExhibitionList() {
 
   useState(() => { load(initialTab); }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (item) => {
     if (!window.confirm('确认删除此展览？')) return;
-    // force 重载：load 内对 loaded 的早退检查读取的是旧闭包，删除后必须强制刷新
-    try { await del('/api/exhibitions/' + id); setLoaded({}); load(activeTab, true); } catch { /* 错误已由 request.js 统一提示 */ }
+    // 常设/临展分表存储，删除必须带类型
+    try { await del(`/api/exhibitions/${item.type}/${item.id}`); setLoaded({}); load(activeTab, true); } catch { /* 错误已由 request.js 统一提示 */ }
   };
+
+  const fmtDate = (d) => (d || '').replace('T', ' ');
+
+  const currentList = lists[activeTab] || [];
 
   return (
     <div>
@@ -45,21 +49,23 @@ export default function ExhibitionList() {
         ))}
       </div>
       <div className="container" style={{ paddingTop: 12 }}>
-        {list.map(item => (
+        {currentList.map(item => (
           <div key={item.id} className="list-item">
-            <div className="list-item-icon">{item.name?.charAt(0)}</div>
+            <div className="list-item-icon">
+              {item.imageUrl ? <img src={item.imageUrl} alt={item.name} /> : item.name?.charAt(0)}
+            </div>
             <div className="list-item-body">
               <div className="list-item-title">{item.name}</div>
-              <div className="list-item-sub">{item.startDate} ~ {item.endDate} · {item.status}</div>
+              <div className="list-item-sub">{fmtDate(item.startDate)} ~ {(item.status === '展出中' && !item.endDate) ? '至今' : fmtDate(item.endDate)} · {item.status}</div>
             </div>
             <div className="action-btns">
               <button className="btn btn-default btn-sm" onClick={() => navigate('/manager/exhibition-collections?id=' + item.id)}>展品</button>
               <button className="btn btn-default btn-sm" onClick={() => navigate('/manager/exhibition-form?id=' + item.id + '&type=' + item.type)}>编辑</button>
-              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>删除</button>
+              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item)}>删除</button>
             </div>
           </div>
         ))}
-        {list.length === 0 && (
+        {currentList.length === 0 && (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--brown-fade)' }}><p>暂无展览</p></div>
         )}
       </div>

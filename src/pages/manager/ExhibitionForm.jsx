@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { get, post, put } from '../../api/request';
+import { compressImage } from '../../utils/image';
 
 export default function ExhibitionForm() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id') || '';
   const type = searchParams.get('type') || 'permanent';
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', hallId: '', startDate: '', endDate: '', description: '' });
+  const [form, setForm] = useState({ name: '', hallId: '', location: '', startDate: '', endDate: '', imageUrl: '', description: '' });
   const [halls, setHalls] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -15,8 +16,13 @@ export default function ExhibitionForm() {
 
   if (id && !loaded) {
     setLoaded(true);
-    get('/api/exhibitions/' + id).then(data => {
-      setForm({ name: data.name || '', hallId: data.hallId || '', startDate: data.startDate || '', endDate: data.endDate || '', description: data.description || '' });
+    // 按展览类型读取详情（常设/临展是两张表、两个接口）
+    get(`/api/exhibitions/${type}/${id}`).then(data => {
+      setForm({
+        name: data.name || '', hallId: data.hallId || '', location: data.location || '',
+        startDate: data.startDate || '', endDate: data.endDate || '',
+        imageUrl: data.imageUrl || '', description: data.description || ''
+      });
     }).catch(() => {});
   }
 
@@ -28,15 +34,19 @@ export default function ExhibitionForm() {
   const handleSubmit = async () => {
     if (submitting) return;
     if (!form.name) { alert('请输入展览名称'); return; }
+    if (type === 'temporary' && !form.location) { alert('请输入展览地点'); return; }
     setSubmitting(true);
+    const payload = type === 'permanent'
+      ? { name: form.name, hallId: form.hallId || null, startDate: form.startDate || null, imageUrl: form.imageUrl, description: form.description }
+      : { name: form.name, location: form.location, startDate: form.startDate || null, endDate: form.endDate || null, imageUrl: form.imageUrl, description: form.description };
     try {
       if (id) {
-        await put('/api/exhibitions/' + id, { ...form, type });
+        await put(`/api/exhibitions/${type}/${id}`, payload);
       } else {
-        await post('/api/exhibitions', { ...form, type });
+        await post(`/api/exhibitions/${type}`, payload);
       }
       alert('保存成功');
-      navigate('/manager/exhibition-list');
+      navigate('/manager/exhibition-list' + (type === 'temporary' ? '?tab=1' : ''));
     } catch { /* 错误已由 request.js 统一提示 */ } finally { setSubmitting(false); }
   };
 
@@ -62,13 +72,46 @@ export default function ExhibitionForm() {
               </select>
             </div>
           ) : (
-            <div className="form-item"><span className="form-label">展厅ID</span><input className="form-input" value={form.hallId} onChange={e => set('hallId', e.target.value)} placeholder="请输入展厅ID" /></div>
+            <div className="form-item"><span className="form-label">展览地点 *</span><input className="form-input" value={form.location} onChange={e => set('location', e.target.value)} placeholder="如：特展厅 / 市美术馆" /></div>
           )}
           <div className="form-item"><span className="form-label">开始日期</span><input className="form-input" type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} /></div>
-          <div className="form-item"><span className="form-label">结束日期</span><input className="form-input" type="date" value={form.endDate} onChange={e => set('endDate', e.target.value)} /></div>
+          {type === 'temporary' && (
+            <div className="form-item"><span className="form-label">结束日期</span><input className="form-input" type="date" value={form.endDate} onChange={e => set('endDate', e.target.value)} /></div>
+          )}
           <div className="form-item">
             <span className="form-label">类型</span>
             <span className="form-value" style={{ flex: 1, textAlign: 'right', fontSize: 14, color: 'var(--brown-light)' }}>{type === 'permanent' ? '常设展览' : '临时巡展'}</span>
+          </div>
+          <div className="form-item form-item-col">
+            <span className="form-label">展览配图</span>
+            <div className="upload-row">
+              <label className="upload-box">
+                {form.imageUrl
+                  ? <img src={form.imageUrl} alt="展览配图" />
+                  : (
+                    <span className="upload-hint">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                      拍照 / 选图
+                    </span>
+                  )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={async e => {
+                    const file = e.target.files[0];
+                    e.target.value = '';
+                    if (!file) return;
+                    try { set('imageUrl', await compressImage(file)); }
+                    catch (err) { alert(err.message || '图片处理失败'); }
+                  }}
+                />
+              </label>
+              {form.imageUrl && (
+                <button className="btn btn-sm btn-default" onClick={() => set('imageUrl', '')}>移除图片</button>
+              )}
+            </div>
+            <span className="form-hint">支持手机拍照或从相册选择，自动压缩后保存</span>
           </div>
         </div>
         <div className="card">
